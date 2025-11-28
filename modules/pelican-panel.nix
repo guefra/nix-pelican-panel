@@ -176,13 +176,14 @@ in
             ${pkgs.rsync}/bin/rsync -a --delete \
             --exclude='.env' \
             --exclude='storage' \
-            --exclude='bootstrap/cache' \
             --exclude='database/database.sqlite' \
             ${pelicanPanelPkg}/share/php/pelican-panel/ \
             ${cfg.runtimeLocation}/
           ''
           "${pkgs.coreutils}/bin/chown -R ${cfg.user}:${cfg.group} ${cfg.runtimeLocation}"
           "${pkgs.coreutils}/bin/chmod -R 755 ${cfg.runtimeLocation}"
+
+          "${pkgs.bash}/bin/bash -c 'HOME=/tmp COMPOSER_HOME=/tmp ${pkgs.php.packages.composer}/bin/composer dump-autoload --working-dir=${cfg.runtimeLocation} --no-interaction'"
         ];
         RemainAfterExit = true;
       };
