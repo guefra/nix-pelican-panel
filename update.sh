@@ -21,12 +21,25 @@ update_source_hash() {
     sed -i "s|sha256 = \"sha256-.*\";|sha256 = \"$hash\";|" "$file"
 }
 
+update_dependency_hash() {
+    local file=$1
+    local hash_key=$2
+    local flake=$3
+    sed -i "s|$hash_key = \"sha256-.*\";|$hash_key = \"\";|" "$file"
+    local hash=$(nix build ".#$flake" 2>&1 | grep -oP 'got:\s+\K\S+' | head -1)
+    sed -i "s|$hash_key = \"\";|$hash_key = \"$hash\";|" "$file"
+}
+
 update_vendor_hash() {
     local file=$1
     local flake=$2
-    sed -i 's|vendorHash = "sha256-.*";|vendorHash = "";|' "$file"
-    local vendor_hash=$(nix build ".#$flake" 2>&1 | grep -oP 'got:\s+\K\S+' | head -1)
-    sed -i "s|vendorHash = \"\";|vendorHash = \"$vendor_hash\";|" "$file"
+    update_dependency_hash "$file" "vendorHash" "$flake"
+}
+
+update_hash() {
+    local file=$1
+    local flake=$2
+    update_dependency_hash "$file" "hash" "$flake"
 }
 
 echo "🔄 Updating Pelican Panel packages..."
@@ -38,10 +51,14 @@ wings_version=$(get_latest_version "wings")
 echo "🔧 Updating Pelican Panel to $panel_version"
 update_version "lib/pelican-panel.nix" "$panel_version"
 update_source_hash "lib/pelican-panel.nix" "panel" "$panel_version"
+update_vendor_hash "lib/pelican-panel-php.nix" "pelican-panel"
+update_hash "lib/pelican-panel-js.nix" "pelican-panel"
 
 echo "🔧 Updating Wings to $wings_version"
 update_version "lib/wings.nix" "$wings_version"
 update_source_hash "lib/wings.nix" "wings" "$wings_version"
+
+echo "🔧 Updating Wings vendor hash..."
 update_vendor_hash "lib/wings.nix" "wings"
 
 echo "✅ Done! Updated to Panel $panel_version, Wings $wings_version"
