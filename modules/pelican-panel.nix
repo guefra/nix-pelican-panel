@@ -194,7 +194,10 @@ in
 
     systemd.services.pelican-panel-queue = {
       description = "Pelican Panel queue worker";
-      after = [ "network.target" ];
+      after = [
+        "network.target"
+        "pelican-panel-deploy.service"
+      ];
       wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         ExecStart = "${pkgs.php}/bin/php ${cfg.runtimeLocation}/artisan queue:work --sleep=3 --tries=3";
@@ -207,6 +210,7 @@ in
 
     systemd.services.pelican-panel-schedule = {
       description = "Run Pelican Panel schedule";
+      after = [ "pelican-panel-deploy.service" ];
       serviceConfig = {
         ExecStart = "${pkgs.php}/bin/php ${cfg.runtimeLocation}/artisan schedule:run";
         User = cfg.user;
