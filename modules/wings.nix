@@ -170,13 +170,12 @@ in
 
       preStart = ''
         mkdir -p /var/log/pelican
-        chown pelican:pelican /var/log/pelican
       '';
 
       serviceConfig = {
         ExecStart = "${wingsPackage}/bin/wings";
-        User = "pelican";
-        Group = "pelican";
+        User = "root";
+        Group = "root";
         Restart = "always";
         RestartSec = "5s";
         SupplementaryGroups = [ "docker" ];
@@ -195,14 +194,6 @@ in
         ExecStart = tokenWriterScript;
       };
     };
-
-    users.users.pelican = {
-      isSystemUser = true;
-      group = "pelican";
-      extraGroups = [ "docker" ];
-    };
-
-    users.groups.pelican = { };
 
     networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ cfg.node.api.port ];
   };
